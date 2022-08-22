@@ -1,0 +1,18 @@
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/sideNav.css">
+    <link rel="stylesheet" type="text/css" href="css/grid.css">
+    <link rel="stylesheet" type="text/css" href="css/sliders.css">
+    <link rel="stylesheet" type="text/css" href="css/graphics.css">
+</head>
+<div id="grid" class="gridContainer">
+    {% for row in grid_array %}
+        {% for cell in row %}
+            <div id="cell_{{cell['row']}}-{{cell['col']}}" class="gridItem" style="background-color: white;"></div>
+        {% endfor %}
+    {% endfor %}
+</div>

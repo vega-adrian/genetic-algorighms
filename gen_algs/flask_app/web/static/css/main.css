@@ -1,0 +1,26 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+}
+
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#main {
+    transition: margin-left .5s;
+    padding: 20px;
+}
+
+.aButtonDiv {
+    margin: 20px 5px;
+}
+
+.aButton {
+    border-radius: 15px;
+    background-color: #999 !important;
+    text-decoration: none;
+    padding: 8px 32px 8px 32px !important;
+    color: #fafafa !important;
+}
+
+.aButton:hover {
+    color: #000 !important;
+}

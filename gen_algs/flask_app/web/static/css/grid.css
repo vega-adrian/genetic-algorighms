@@ -1,0 +1,10 @@
+.gridContainer {
+    display: grid;
+    width: 0;
+}
+
+.gridItem {
+    height: 3px;
+    width: 3px;
+    border: 1px solid rgba(228, 228, 228, 0.8);
+}

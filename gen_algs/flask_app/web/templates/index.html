@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/sideNav.css">
+    <link rel="stylesheet" type="text/css" href="css/grid.css">
+    <link rel="stylesheet" type="text/css" href="css/sliders.css">
+    <link rel="stylesheet" type="text/css" href="css/graphics.css">
+    <title>Genetic Algorithms</title>
+</head>
+<body>
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <form id="settingsForm" action="#">
+            <div class="inputContainer">
+                <p>World size:</p>
+                <input type="number" value="150" id="gridH">px X <input type="number" value="150" id="gridW">px
+            </div>
+            <div class="inputContainer">
+                <p><label for="numGensSlider"><span id="numGensValue"></span> generations</label></p>
+                <input type="range" min="1" max="1000" value="100" class="slider" id="numGensSlider">
+            </div>
+            <div class="inputContainer">
+                <p><label for="popSizeSlider"><span id="popSizeValue"></span> individuals</label></p>
+                <input type="range" min="1" max="1000" value="7" class="slider" id="popSizeSlider">
+            </div>
+            <div class="inputContainer">
+                <p><label for="numGenesSlider"><span id="numGenesValue"></span> genes</label></p>
+                <input type="range" min="1" max="100" value="4" class="slider" id="numGenesSlider">
+            </div>
+            <div class="inputContainer">
+                <p><label for="muteProbSlider">Mute probability: <span id="muteProbValue"></span> %</label></p>
+                <input type="range" min="0" max="100" value="20" class="slider" id="muteProbSlider">
+            </div>
+            <div class="inputContainer">
+                <p><label for="mateProbSlider">Mate probability: <span id="mateProbValue"></span> %</label></p>
+                <input type="range" min="0" max="100" value="20" class="slider" id="mateProbSlider">
+            </div>
+            <div class="inputContainer">
+                <p>
+                    <label for="allowMutationsBox">Allow mutations:</label>
+                    <input type="checkbox" id="allowMutationsBox">
+                </p>
+            </div>
+            <div class="inputContainer">
+                <p>
+                    <label for="allowMurdersBox">Allow murders:</label>
+                    <input type="checkbox" id="allowMurdersBox">
+                </p>
+            </div>
+        </form>
+    </div>
+      
+    <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+    <div id="main">
+        <div style="font-size:30px;cursor:pointer" onclick="openNav()" id="openNav">&#9776;</div>
+        <div>
+            <h1>Genetic Algorithms 🧬</h1>
+            <h2>Generation {{gen_num}}/<span id="maxGens"></span></h2>
+        </div>
+        <div id="grid" class="gridContainer">
+            {% for row in grid_array %}
+                {% for cell in row %}
+                    <div id="cell_{{cell['row']}}-{{cell['col']}}" class="gridItem" data-background-color="{{cell['background-color']}}"></div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        <div class="aButtonDiv">
+            <a href="javascript:void(0)" class="aButton" id="startButton">Start</a>
+        </div>
+    </div>
+    <!-- <script src="js/canvas.js"></script> -->
+    <script src="js/main.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/sideNav.js"></script>
+    <script src="js/sliders.js"></script>
+</body>
+</html>
