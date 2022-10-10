@@ -2,7 +2,7 @@ import os
 from itertools import product
 from typing import List, Tuple, Dict
 from flask import Flask, render_template, send_from_directory, request, jsonify, Response, stream_with_context
-from individual import Individual
+from objects.individual import Individual
 from evolution import initialize_coordinates, create_population, evolve
 
 

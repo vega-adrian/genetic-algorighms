@@ -2,7 +2,7 @@ import json
 import random
 from itertools import product
 from typing import List, Tuple
-from individual import Individual
+from objects.individual import Individual
 
 
 population: List[Individual] = None
@@ -39,7 +39,7 @@ def evolve(
                 coordinates = [e.coords for e in population]
                 ind.sense_env(mate_coordinates=coordinates, heat_sources=heat_sources)
                 ind.take_step(mate_coordinates=coordinates)
-            yield json.dumps({
+            json.dumps({
                 'generation': gen_i,
                 'step': step_i,
                 'coordinates': [e.coords for e in population]
