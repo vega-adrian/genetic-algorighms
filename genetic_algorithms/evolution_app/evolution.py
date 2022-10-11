@@ -31,30 +31,34 @@ def evolve(
     population: List[Individual],
     num_generations: int,
     lifetime: int,
+    start_generation: int = 0,
+    start_step: int = 0,
     heat_sources: Tuple[int, int] = [],
 ):
-    for gen_i in range(num_generations):
-        for step_i in range(lifetime):
+    for gen_i in range(start_generation, num_generations):
+        for step_i in range(start_step, lifetime):
             for ind in population:
-                coordinates = [e.coords for e in population]
-                ind.sense_env(mate_coordinates=coordinates, heat_sources=heat_sources)
-                ind.take_step(mate_coordinates=coordinates)
-            json.dumps({
+                current_coordinates = [e.coords for e in population]
+                ind.sense_env(mate_coordinates=current_coordinates, heat_sources=heat_sources)
+                ind.take_step(mate_coordinates=current_coordinates)
+            iteration_info = {
                 'generation': gen_i,
                 'step': step_i,
-                'coordinates': [e.coords for e in population]
-            })
+                'current_coordinates': [e.coords for e in population]
+            }
+            print(f"Generation #{gen_i}, step {step_i}/{lifetime}")
+            # json.dumps(iteration_info)
         # TODO: mating and muting
-        coordinates = initialize_coordinates(pop_size=len(population), world_size=population[0].world_size)
+        # coordinates = initialize_coordinates(pop_size=len(population), world_size=population[0].world_size)
 
 
 if __name__ == '__main__':
-    POP_SIZE = 32
+    POP_SIZE = 200
     WORLD_SIZE = (150, 150)
 
     HEAT_SOURCES = []
-    LIFETIME = 10
-    NUM_GENERATIONS = 10
+    LIFETIME = 100
+    NUM_GENERATIONS = 500
 
     coordinates = initialize_coordinates(pop_size=POP_SIZE, world_size=WORLD_SIZE)
     print(coordinates)

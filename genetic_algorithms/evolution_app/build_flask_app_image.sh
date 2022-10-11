@@ -1,0 +1,1 @@
+docker build -t genetic_algorithms_evolution_app:flask -f ./Dockerfile .

@@ -1,0 +1,10 @@
+version: '3.3'
+
+services:
+  evolution_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: genetic_algorithms_evolution_app:flask
+    ports:
+      - 5000:5000

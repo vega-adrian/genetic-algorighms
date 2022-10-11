@@ -77,12 +77,10 @@ class Individual():
     def take_step(self, mate_coordinates: List[Tuple[int, int]]):
         output = self.brain.output(self.input_vector)
 
-        print(output)
-        print(output.shape)
-
         kill_threshold = 1
         if output[2] > kill_threshold:
-            print('I feel like murdering')
+            pass
+            # print('I feel like murdering')
 
         move_positive_threshold = 0.1
         move_negative_threshold = -0.1
@@ -132,9 +130,10 @@ class Individual():
         if new_coords and self.valid_coordinates(new_coords, mate_coordinates):
             self.coords = new_coords
         else:
-            print(f"Not a valid coord: {new_coords}")
-            if new_coords in mate_coordinates:
-                print(f"Because there is someone else")
+            pass
+            # print(f"Not a valid coord: {new_coords}")
+            # if new_coords in mate_coordinates:
+            #     print(f"Because there is someone else")
 
         self.step += 1
         return output
