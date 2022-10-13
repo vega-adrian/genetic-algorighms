@@ -15,14 +15,16 @@ class Individual():
         world_size (Tuple[int, int]): _description_
     """
 
-    DEFAULT_NUM_GENES = 57
+    DEFAULT_NUM_GENES = 4
 
     def __init__(
         self,
+        individual_id: str,
         initial_coords: Tuple[int, int],
         lifetime: int,
         world_size: Tuple[int, int],
     ) -> None:
+        self.id = individual_id
         self.brain = Brain.init_random_genes(self.DEFAULT_NUM_GENES)
         # self.brain = KerasBrain()
         self.coords = initial_coords
@@ -31,7 +33,7 @@ class Individual():
         self.input_vector = None
         self.alive = True
         self.step = 0
-        self.color = None
+        self.color = self.brain.hex_gene_sequence
     
     def sense_env(
         self,
@@ -47,7 +49,7 @@ class Individual():
             self.alive = False
 
         self.input_vector = np.asarray([
-            self.coords[0],  # distance to the top
+                self.coords[0],  # distance to the top
             self.world_size[0] - self.coords[0] - 1,  # distance to the bottom
             self.coords[1],  # distance to the left wall
             self.world_size[1] - self.coords[1] - 1,  # distance to the right wall
@@ -82,84 +84,63 @@ class Individual():
             pass
             # print('I feel like murdering')
 
-        move_positive_threshold = 0.1
-        move_negative_threshold = -0.1
+        move_positive_threshold = 0.05
+        move_negative_threshold = -0.05
 
-        new_coords = None
-        if output[0] > 0 and output[1] > 0:
-            if output[0] > move_positive_threshold and output[1] > move_positive_threshold:
-                # move bottom right
-                new_coords = (self.coords[0] + 1, self.coords[1] + 1)
-            elif output[0] > move_positive_threshold:
-                # move bottom
-                new_coords = (self.coords[0] + 1, self.coords[1])
-            elif output[1] > move_positive_threshold:
-                # move right
-                new_coords = (self.coords[0], self.coords[1] + 1)
-        elif output[0] > 0 and output[1] < 0:
-            if output[0] > move_positive_threshold and output[1] < move_negative_threshold:
-                # move bottom left
-                new_coords = (self.coords[0] + 1, self.coords[1] - 1)
-            elif output[0] > move_positive_threshold:
-                # move bottom
-                new_coords = (self.coords[0] + 1, self.coords[1])
-            elif output[1] < move_negative_threshold:
-                # move left
-                new_coords = (self.coords[0], self.coords[1] - 1)
-        elif output[0] < 0 and output[1] > 0:
-            if output[0] < move_negative_threshold and output[1] > move_positive_threshold:
-                # move top right
-                new_coords = (self.coords[0] - 1, self.coords[1] + 1)
-            elif output[0] < move_negative_threshold:
-                # move top
-                new_coords = (self.coords[0] - 1, self.coords[1])
-            elif output[1] > move_positive_threshold:
-                # move right
-                new_coords = (self.coords[0], self.coords[1] + 1)
-        elif output[0] < 0 and output[1] < 0:
-            if output[0] < move_negative_threshold and output[1] < move_negative_threshold:
-                # move top left
-                new_coords = (self.coords[0] - 1, self.coords[1] - 1)
-            elif output[0] < move_negative_threshold:
-                # move top
-                new_coords = (self.coords[0] - 1, self.coords[1])
-            elif output[1] < move_negative_threshold:
-                # move left
-                new_coords = (self.coords[0], self.coords[1] - 1)
+        coords_delta = [0, 0]
+        if output[0] > move_positive_threshold:
+            coords_delta[0] = 1
+        elif output[0] < move_negative_threshold:
+            coords_delta[0] = -1
 
-        if new_coords and self.valid_coordinates(new_coords, mate_coordinates):
-            self.coords = new_coords
-        else:
-            pass
-            # print(f"Not a valid coord: {new_coords}")
-            # if new_coords in mate_coordinates:
-            #     print(f"Because there is someone else")
+        if output[1] > move_positive_threshold:
+            coords_delta[1] = 1
+        elif output[1] < move_negative_threshold:
+            coords_delta[1] = -1
+        
+        if coords_delta != [0, 0]:
+            new_coords = tuple(sum(e) for e in zip(self.coords, coords_delta))
+
+            if self.valid_coordinates(new_coords, mate_coordinates):
+                # print(f"Ind {self.id} has changed coordinates from {self.coords} to {new_coords}")
+                self.coords = new_coords
+        #     else:
+        #         print(f"Not a valid coord: {new_coords} {'Because there is someone else' if new_coords in mate_coordinates else ''}")
+        # else:
+        #     print("Didn't move")
 
         self.step += 1
         return output
 
+    def mute(self, mute_probability: float) -> None:
+        """Mute function.
 
-def mate(ind1: Individual, ind2: Individual, mate_prob: float):
+        Args:
+            mute_probability (float): _description_
+        """
+        has_muted = False
+        for i in range(len(self.brain.hex_gene_sequence)):
+            if random.random() < mute_probability:
+                self.brain.hex_gene_sequence[i] = hex(np.random.randint(0, 16))[2:]
+                has_muted = True
+        if has_muted:
+            self.brain.express_genes()
+
+
+def mate(ind1: Individual, ind2: Individual, mate_probability: float) -> Tuple[Individual, Individual]:
     """Mate function.
 
     Args:
         ind1 (Individual): _description_
         ind2 (Individual): _description_
-        mate_prob (float): _description_
+        mate_probability (float): _description_
 
     Returns:
         Tuple[Individual, Individual]: _description_
     """
-    if random.random() < mate_prob:
+    if random.random() < mate_probability:
+        half_sequence = int(len(ind1.brain.hex_gene_sequence)/2)
+        child1_seq = ind1.brain.hex_gene_sequence[:half_sequence] + ind2.brain.hex_gene_sequence[half_sequence:]
+        child2_seq = ind2.brain.hex_gene_sequence[:half_sequence] + ind1.brain.hex_gene_sequence[half_sequence:]
+
         return (ind1, ind2)
-
-
-def mute(ind: Individual, mute_prob: float) -> None:
-    """Mute function.
-
-    Args:
-        ind (Individual): _description_
-        mute_prob (float): _description_
-    """
-    if random.random() < mute_prob:
-        pass
