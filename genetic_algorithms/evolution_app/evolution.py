@@ -10,23 +10,26 @@ coordinates: List[Tuple[int, int]] = None
 hot_sources: List[Tuple[int, int]] = None
 
 
-def initialize_coordinates(pop_size: int, world_size: Tuple[int, int]):
-    allCoords = [coord for coord in product(range(world_size[0]), range(world_size[1]))]
-    random.shuffle(allCoords)
-    if pop_size > len(allCoords):
-        print('muy grande')
-        return None
-    return allCoords[:pop_size]
+def initialize_coordinates(
+    pop_size: int,
+    world_size: Tuple[int, int],
+) -> List[Tuple[int, int]]:
+    every_coord = [coord for coord in product(range(world_size[0]), range(world_size[1]))]
+    if pop_size > len(every_coord):
+        raise Exception(f"Population size of {pop_size} is too big for a {world_size} world.")
+    else:
+        random.shuffle(every_coord)
+        return every_coord[:pop_size]
 
 
 def create_population(
     coordinates: List[Tuple[int, int]],
     lifetime: int,
     world_size: Tuple[int, int],
-):
+) -> List[Individual]:
     return [
         Individual(
-            individual_id=f'ind_{i}',
+            individual_id=f'individual_{i}',
             initial_coords=coord,
             lifetime=lifetime,
             world_size=world_size,

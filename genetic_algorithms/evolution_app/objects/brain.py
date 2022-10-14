@@ -1,6 +1,7 @@
 import os
 import binascii
 import numpy as np
+from typing import List, Literal
 
 
 class Brain():
@@ -36,6 +37,7 @@ class Brain():
     - 00: move left/right, negative values left, positive values, right.
     - 01: move up/down, negative is up, positive is down.
     - 02: kill closest individual.
+    - 03: not defined.
 
     ### Gene structure
     Each gene has a 32 bit sequence - 8 hex digits:
@@ -49,20 +51,21 @@ class Brain():
         numbers are scaled by 2e6 so that the range is between -4.1943 and +4.1943.
     """
 
-    NUM_INPUT_NEURONS = 16
-    NUM_INNER_NEURONS = 4
-    NUM_OUTPUT_NEURONS = 4
-    GENE_LENGTH = 32
-    GENE_LENGTH_HEX = 8
-    NEURON_TYPE_INPUT = 'input'
-    NEURON_TYPE_INNER = 'inner'
-    NEURON_TYPE_OUTPUT = 'output'
-    NEURON_TYPES = [NEURON_TYPE_INPUT, NEURON_TYPE_INNER, NEURON_TYPE_OUTPUT]
-    CONNECTION_WEIGHT_SCALE = 2e6
+    NUM_INPUT_NEURONS: Literal[16] = 16
+    NUM_INNER_NEURONS: Literal[4] = 4
+    NUM_OUTPUT_NEURONS: Literal[4] = 4
+    GENE_LENGTH: Literal[32] = 32
+    GENE_LENGTH_HEX: Literal[8] = 8
+    NEURON_TYPE_INPUT: Literal['input'] = 'input'
+    NEURON_TYPE_INNER: Literal['inner'] = 'inner'
+    NEURON_TYPE_OUTPUT: Literal['output'] = 'output'
+    NEURON_TYPES: List[str] = [NEURON_TYPE_INPUT, NEURON_TYPE_INNER, NEURON_TYPE_OUTPUT]
+    # CONNECTION_WEIGHT_SCALE: float = 2e6
+    CONNECTION_WEIGHT_SCALE: float = 1e6
 
     def __init__(
         self,
-        hex_gene_sequence: str
+        hex_gene_sequence: str,
     ) -> None:
         assert(
             len(hex_gene_sequence) % self.GENE_LENGTH_HEX == 0
@@ -101,6 +104,7 @@ class Brain():
             target_neuron_id = int(gene[6:6+2], 2)
             # print(f"TARGET_NEURON_ID: {target_neuron_id}")
 
+
             weight = -int(gene[8] + ''.join(['0']*(self.GENE_LENGTH - 8 -1)), 2) + int(gene[9:], 2)
             weight = weight/self.CONNECTION_WEIGHT_SCALE
             # print(f"WEIGHT: {weight}\n")
@@ -115,7 +119,7 @@ class Brain():
                 self.input_output_tensor[source_neuron_id, target_neuron_id] = weight
         # print(self.input_inner_tensor)
 
-    def output(self, input_vector):
+    def output(self, input_vector: np.ndarray) -> np.ndarray:
         input_inner_sum = input_vector @ self.input_inner_tensor
         inner_inner_sum = input_inner_sum @ self.inner_inner_tensor
 

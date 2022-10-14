@@ -15,7 +15,8 @@ class Individual():
         world_size (Tuple[int, int]): _description_
     """
 
-    DEFAULT_NUM_GENES = 4
+    DEFAULT_NUM_GENES: int = 4
+    HEAT_RISK_THRESHOLD: int = 1000
 
     def __init__(
         self,
@@ -49,7 +50,7 @@ class Individual():
             self.alive = False
 
         self.input_vector = np.asarray([
-                self.coords[0],  # distance to the top
+            self.coords[0],  # distance to the top
             self.world_size[0] - self.coords[0] - 1,  # distance to the bottom
             self.coords[1],  # distance to the left wall
             self.world_size[1] - self.coords[1] - 1,  # distance to the right wall
