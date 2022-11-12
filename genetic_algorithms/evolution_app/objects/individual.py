@@ -1,4 +1,3 @@
-import random
 from math import dist
 import numpy as np
 from typing import Tuple, List
@@ -15,7 +14,7 @@ class Individual():
         world_size (Tuple[int, int]): _description_
     """
 
-    DEFAULT_NUM_GENES: int = 4
+    DEFAULT_NUM_GENES: int = 6
     HEAT_RISK_THRESHOLD: int = 1000
 
     def __init__(
@@ -34,8 +33,11 @@ class Individual():
         self.input_vector = None
         self.alive = True
         self.step = 0
+        self.express_color()
+
+    def express_color(self):
         self.color = self.brain.hex_gene_sequence
-    
+
     def sense_env(
         self,
         mate_coordinates: List[Tuple[int, int]],
@@ -46,7 +48,7 @@ class Individual():
         except ZeroDivisionError:
             self.alive = False
         
-        if heat_risk > 10000:
+        if heat_risk > self.HEAT_RISK_THRESHOLD:
             self.alive = False
 
         self.input_vector = np.asarray([
@@ -64,8 +66,8 @@ class Individual():
             int((self.coords[0] + 1, self.coords[1] + 1) in mate_coordinates),  # bottom right
             heat_risk,  # burn risk
             round(self.step/self.lifetime, 3),  # lifespan
-            (random.random() - 0.5)*4,  # random
-            (random.random() - 0.5)*4,  # random
+            (np.random.rand() - 0.5)*4,  # random
+            (np.random.rand() - 0.5)*4,  # random
         ]).reshape(1, -1)
     
     def valid_coordinates(self, coords: Tuple[int, int], mate_coordinates: List[Tuple[int, int]]):
@@ -85,8 +87,8 @@ class Individual():
             pass
             # print('I feel like murdering')
 
-        move_positive_threshold = 0.05
-        move_negative_threshold = -0.05
+        move_positive_threshold = 0.0
+        move_negative_threshold = -0.0
 
         coords_delta = [0, 0]
         if output[0] > move_positive_threshold:
@@ -119,16 +121,26 @@ class Individual():
         Args:
             mute_probability (float): _description_
         """
-        has_muted = False
-        for i in range(len(self.brain.hex_gene_sequence)):
-            if random.random() < mute_probability:
-                self.brain.hex_gene_sequence[i] = hex(np.random.randint(0, 16))[2:]
-                has_muted = True
-        if has_muted:
+        new_hex_gene_sequence = ''.join([
+            (
+                hex(np.random.randint(0, 16))[2:]
+                if np.random.rand() < mute_probability
+                else self.brain.hex_gene_sequence[i]
+            )
+            for i in range(len(self.brain.hex_gene_sequence))
+        ])
+        if new_hex_gene_sequence != self.brain.hex_gene_sequence:
+            self.brain.hex_gene_sequence = new_hex_gene_sequence
             self.brain.express_genes()
 
 
-def mate(ind1: Individual, ind2: Individual, mate_probability: float) -> Tuple[Individual, Individual]:
+def mate(
+    ind1: Individual,
+    ind2: Individual,
+    mate_probability: float,
+    child1_id: str,
+    child2_id: str,
+) -> Tuple[Individual, Individual]:
     """Mate function.
 
     Args:
@@ -139,9 +151,27 @@ def mate(ind1: Individual, ind2: Individual, mate_probability: float) -> Tuple[I
     Returns:
         Tuple[Individual, Individual]: _description_
     """
-    if random.random() < mate_probability:
+    if np.random.rand() < mate_probability:
+        child1 = Individual(
+            individual_id=child1_id,
+            initial_coords=None,
+            lifetime=ind1.lifetime,
+            world_size=ind1.world_size,
+        )
+        child2 = Individual(
+            individual_id=child2_id,
+            initial_coords=None,
+            lifetime=ind2.lifetime,
+            world_size=ind2.world_size,
+        )
+        
         half_sequence = int(len(ind1.brain.hex_gene_sequence)/2)
         child1_seq = ind1.brain.hex_gene_sequence[:half_sequence] + ind2.brain.hex_gene_sequence[half_sequence:]
         child2_seq = ind2.brain.hex_gene_sequence[:half_sequence] + ind1.brain.hex_gene_sequence[half_sequence:]
-
-        return (ind1, ind2)
+        child1.brain = Brain(hex_gene_sequence=child1_seq)
+        child1.express_color()
+        child2.brain = Brain(hex_gene_sequence=child2_seq)
+        child2.express_color()
+        return (child1, child2)
+    else:
+        return (None, None)

@@ -61,7 +61,7 @@ class Brain():
     NEURON_TYPE_OUTPUT: Literal['output'] = 'output'
     NEURON_TYPES: List[str] = [NEURON_TYPE_INPUT, NEURON_TYPE_INNER, NEURON_TYPE_OUTPUT]
     # CONNECTION_WEIGHT_SCALE: float = 2e6
-    CONNECTION_WEIGHT_SCALE: float = 1e6
+    CONNECTION_WEIGHT_SCALE: float = 0.5e6
 
     def __init__(
         self,
@@ -104,8 +104,7 @@ class Brain():
             target_neuron_id = int(gene[6:6+2], 2)
             # print(f"TARGET_NEURON_ID: {target_neuron_id}")
 
-
-            weight = -int(gene[8] + ''.join(['0']*(self.GENE_LENGTH - 8 -1)), 2) + int(gene[9:], 2)
+            weight = -int(gene[8] + '0'*(self.GENE_LENGTH-8-1), 2) + int(gene[9:], 2)
             weight = weight/self.CONNECTION_WEIGHT_SCALE
             # print(f"WEIGHT: {weight}\n")
 
