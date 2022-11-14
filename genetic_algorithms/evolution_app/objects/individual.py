@@ -1,6 +1,6 @@
 from math import dist
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 from .brain import Brain
 # from .keras_brain import Brain as KerasBrain
 
@@ -14,18 +14,19 @@ class Individual():
         world_size (Tuple[int, int]): _description_
     """
 
-    DEFAULT_NUM_GENES: int = 6
-    HEAT_RISK_THRESHOLD: int = 1000
+    DEFAULT_NUM_GENES: int = 30
+    HEAT_RISK_THRESHOLD: int = 0.1
 
     def __init__(
         self,
         individual_id: str,
-        initial_coords: Tuple[int, int],
         lifetime: int,
         world_size: Tuple[int, int],
+        initial_coords: Optional[Tuple[int, int]] = None,
+        num_genes: Optional[int] = None,
     ) -> None:
         self.id = individual_id
-        self.brain = Brain.init_random_genes(self.DEFAULT_NUM_GENES)
+        self.brain = Brain.init_random_genes(num_genes or self.DEFAULT_NUM_GENES)
         # self.brain = KerasBrain()
         self.coords = initial_coords
         self.lifetime = lifetime
@@ -43,32 +44,34 @@ class Individual():
         mate_coordinates: List[Tuple[int, int]],
         heat_sources: List[Tuple[int, int]],
     ):
-        try:
-            heat_risk = round(sum([1/dist(self.coords, heat) for heat in heat_sources]), 3)
-        except ZeroDivisionError:
-            self.alive = False
-        
-        if heat_risk > self.HEAT_RISK_THRESHOLD:
-            self.alive = False
+        heat_risk = 0
+        if heat_sources:
+            try:
+                heat_risk = np.round(np.sum([1/dist(self.coords, heat) for heat in heat_sources]), 3)
+                if heat_risk > self.HEAT_RISK_THRESHOLD:
+                    self.alive = False
+            except ZeroDivisionError:
+                self.alive = False
 
-        self.input_vector = np.asarray([
-            self.coords[0],  # distance to the top
-            self.world_size[0] - self.coords[0] - 1,  # distance to the bottom
-            self.coords[1],  # distance to the left wall
-            self.world_size[1] - self.coords[1] - 1,  # distance to the right wall
-            int((self.coords[0] - 1, self.coords[1] - 1) in mate_coordinates),  # top left
-            int((self.coords[0] - 1, self.coords[1]) in mate_coordinates),  # top left
-            int((self.coords[0] - 1, self.coords[1] + 1) in mate_coordinates),  # top right
-            int((self.coords[0], self.coords[1] - 1) in mate_coordinates),  # left
-            int((self.coords[0], self.coords[1] + 1) in mate_coordinates),  # right
-            int((self.coords[0] + 1, self.coords[1] - 1) in mate_coordinates),  # bottom left
-            int((self.coords[0] + 1, self.coords[1]) in mate_coordinates),  # bottom
-            int((self.coords[0] + 1, self.coords[1] + 1) in mate_coordinates),  # bottom right
-            heat_risk,  # burn risk
-            round(self.step/self.lifetime, 3),  # lifespan
-            (np.random.rand() - 0.5)*4,  # random
-            (np.random.rand() - 0.5)*4,  # random
-        ]).reshape(1, -1)
+        if self.alive:
+            self.input_vector = np.array([
+                np.uint16(self.coords[0]),  # distance to the top
+                np.uint16(self.world_size[0] - self.coords[0] - 1),  # distance to the bottom
+                np.uint16(self.coords[1]),  # distance to the left wall
+                np.uint16(self.world_size[1] - self.coords[1] - 1),  # distance to the right wall
+                np.uint8((self.coords[0] - 1, self.coords[1] - 1) in mate_coordinates),  # top left
+                np.uint8((self.coords[0] - 1, self.coords[1]) in mate_coordinates),  # top
+                np.uint8((self.coords[0] - 1, self.coords[1] + 1) in mate_coordinates),  # top right
+                np.uint8((self.coords[0], self.coords[1] - 1) in mate_coordinates),  # left
+                np.uint8((self.coords[0], self.coords[1] + 1) in mate_coordinates),  # right
+                np.uint8((self.coords[0] + 1, self.coords[1] - 1) in mate_coordinates),  # bottom left
+                np.uint8((self.coords[0] + 1, self.coords[1]) in mate_coordinates),  # bottom
+                np.uint8((self.coords[0] + 1, self.coords[1] + 1) in mate_coordinates),  # bottom right
+                heat_risk,  # burn risk
+                np.round(self.step/self.lifetime, 3),  # lifespan
+                (np.random.rand() - 0.5),  # random
+                (np.random.rand() - 0.5),  # random
+            ]).reshape(1, -1)
     
     def valid_coordinates(self, coords: Tuple[int, int], mate_coordinates: List[Tuple[int, int]]):
         return (
@@ -103,14 +106,8 @@ class Individual():
         
         if coords_delta != [0, 0]:
             new_coords = tuple(sum(e) for e in zip(self.coords, coords_delta))
-
             if self.valid_coordinates(new_coords, mate_coordinates):
-                # print(f"Ind {self.id} has changed coordinates from {self.coords} to {new_coords}")
                 self.coords = new_coords
-        #     else:
-        #         print(f"Not a valid coord: {new_coords} {'Because there is someone else' if new_coords in mate_coordinates else ''}")
-        # else:
-        #     print("Didn't move")
 
         self.step += 1
         return output
