@@ -57,6 +57,16 @@ def print_status(
         print('_' + '__'*world_size[1])
 
 
+def is_in_box(
+    coordinates: Tuple[int, int],
+    box: Tuple[Tuple[int, int], Tuple[int, int]],
+) -> bool:
+    return (
+        coordinates[0] >= box[0][0] and coordinates[0] <= box[1][0]
+        and coordinates[1] >= box[0][1] and coordinates[1] <= box[1][1]
+    )
+
+
 def evolve(
     population_size: int,
     num_genes: int,
@@ -115,32 +125,21 @@ def evolve(
                     ),
                 )
 
-        survivors = []
-        if safe_boxes:
-            survivors += [
-                ind
-                for ind in population
-                if ind.alive and any([
-                    (
-                        ind.coords[0] >= safe_box[0][0] and ind.coords[0] <= safe_box[1][0]
-                        and ind.coords[1] >= safe_box[0][1] and ind.coords[1] <= safe_box[1][1]
-                    )
-                    for safe_box in safe_boxes
-                ])
-            ]
-        if death_boxes:
-            survivors += [
-                ind
-                for ind in population
-                if ind.alive and not any([
-                    (
-                        ind.coords[0] >= death_box[0][0] and ind.coords[0] <= death_box[1][0]
-                        and ind.coords[1] >= death_box[0][1] and ind.coords[1] <= death_box[1][1]
-                    )
-                    for death_box in death_boxes
-                ])
-            ]
-
+        survivors = [
+            ind
+            for ind in population
+            if ind.alive
+            and (
+                (
+                    not safe_boxes
+                    or any([is_in_box(ind.coords, safe_box) for safe_box in (safe_boxes or [])])
+                )
+                and (
+                    not death_boxes
+                    or not any([is_in_box(ind.coords, death_box) for death_box in (death_boxes or [])])
+                )
+            )
+        ]
         num_survivors = len(survivors)
         last_survival_rate = num_survivors/generation_size
 
@@ -188,23 +187,23 @@ def evolve(
 
 
 if __name__ == '__main__':
-    POP_SIZE = 200
+    POP_SIZE = 250
     WORLD_SIZE = (20, 60)
 
     HEAT_SOURCES = []
     LIFETIME = 50
     NUM_GENERATIONS = 100
-    NUM_GENES = 20
+    NUM_GENES = 7
 
-    MUTE_PROBABILITY = 0
-    MATE_PROBABILITY = 0.02
+    MUTE_PROBABILITY = 0.0005
+    MATE_PROBABILITY = 0.7
 
     DEATH_BOXES = [
-        ((0,0), (20, 45)),
+        # ((0,0), (20, 45)),
         # ((10,0), (20, 60))
     ]
     SAFE_BOXES = [
-        # ((5,15), (15, 45))
+        ((0,0), (20, 15))
     ]
     evolve(
         population_size=POP_SIZE,

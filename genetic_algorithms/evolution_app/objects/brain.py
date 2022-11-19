@@ -43,9 +43,9 @@ class Brain():
     Each gene has a 32 bit sequence - 8 hex digits:
 
     ☐|☐☐☐☐|☐|☐☐|☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐
-    - Bit 0: indicates if source neuron is input/inner/output neuron.
+    - Bit 0: indicates if source neuron is input/inner neuron.
     - Bits 1:5 (4 bits): identify source neuron.
-    - Bit 5: indicates if target neuron is input/inner/output neuron.
+    - Bit 5: indicates if target neuron is inner/output neuron.
     - Bits 6:8 (2 bits): identify target neuron.
     - Bits 8:32 (24 bits): represent the weight of the connection. Numbers between -8388608 and +8388607. So the \
         numbers are scaled by 2e6 so that the range is between -4.1943 and +4.1943.
