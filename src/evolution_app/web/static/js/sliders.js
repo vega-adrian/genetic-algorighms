@@ -15,6 +15,13 @@ popSizeSlider.oninput = function() {
     popSizeValue.innerHTML = this.value;
 }
 
+var lifespanSlider = document.getElementById("lifespanSlider");
+var lifespanValue = document.getElementById("lifespanValue");
+lifespanValue.innerHTML = lifespanSlider.value;
+lifespanSlider.oninput = function() {
+    lifespanValue.innerHTML = this.value;
+}
+
 var numGenesSlider = document.getElementById("numGenesSlider");
 var numGenesValue = document.getElementById("numGenesValue");
 numGenesValue.innerHTML = numGenesSlider.value;

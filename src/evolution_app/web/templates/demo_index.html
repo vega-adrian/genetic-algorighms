@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo stream</title>
+</head>
+<body>
+    <h1>This is a streaming demo for Flask</h1>
+    <p id="streamedP"></p>
+    <button onclick="streamData()">Haz click</a>
+    <script>
+        function streamData() {
+            var streamedP = document.getElementById("streamedP");
+            for (let index = 0; index < 20; index++) {
+                fetch('/stream?it=' + index)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    streamedP.innerHTML = data.text;
+                })
+            }
+        }
+    </script>
+</body>
+</html>

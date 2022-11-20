@@ -30,8 +30,12 @@
                 <input type="range" min="1" max="{{world_size[0]*world_size[1]}}" value="{{pop_size}}" class="slider" id="popSizeSlider">
             </div>
             <div class="inputContainer">
+                <p><label for="lifespanSlider">Lifespan: <span id="lifespanValue"></span> steps</label></p>
+                <input type="range" min="1" max="500" value="60" class="slider" id="lifespanSlider">
+            </div>
+            <div class="inputContainer">
                 <p><label for="numGenesSlider"><span id="numGenesValue"></span> genes</label></p>
-                <input type="range" min="1" max="4" value="2" class="slider" id="numGenesSlider">
+                <input type="range" min="1" max="200" value="6" class="slider" id="numGenesSlider">
             </div>
             <div class="inputContainer">
                 <p><label for="muteProbSlider">Mute probability: <span id="muteProbValue"></span> %</label></p>

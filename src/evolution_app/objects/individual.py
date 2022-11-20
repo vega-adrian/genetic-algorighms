@@ -10,7 +10,7 @@ class Individual():
 
     Args:
         initial_coords (Tuple[int, int]): _description_
-        lifetime (int): _description_
+        lifespan (int): _description_
         world_size (Tuple[int, int]): _description_
     """
 
@@ -20,16 +20,15 @@ class Individual():
     def __init__(
         self,
         individual_id: str,
-        lifetime: int,
+        lifespan: int,
         world_size: Tuple[int, int],
         initial_coords: Optional[Tuple[int, int]] = None,
         num_genes: Optional[int] = None,
     ) -> None:
         self.id = individual_id
         self.brain = Brain.init_random_genes(num_genes or self.DEFAULT_NUM_GENES)
-        # self.brain = KerasBrain()
         self.coords = initial_coords
-        self.lifetime = lifetime
+        self.lifespan = lifespan
         self.world_size = world_size
         self.input_vector = None
         self.alive = True
@@ -68,7 +67,7 @@ class Individual():
                 np.uint8((self.coords[0] + 1, self.coords[1]) in mate_coordinates),  # bottom
                 np.uint8((self.coords[0] + 1, self.coords[1] + 1) in mate_coordinates),  # bottom right
                 heat_risk,  # burn risk
-                np.round(self.step/self.lifetime, 3),  # lifespan
+                np.round(self.step/self.lifespan, 3),  # lifespan
                 (np.random.rand() - 0.5),  # random
                 (np.random.rand() - 0.5),  # random
             ]).reshape(1, -1)
@@ -152,13 +151,13 @@ def mate(
         child1 = Individual(
             individual_id=child1_id,
             initial_coords=None,
-            lifetime=ind1.lifetime,
+            lifespan=ind1.lifespan,
             world_size=ind1.world_size,
         )
         child2 = Individual(
             individual_id=child2_id,
             initial_coords=None,
-            lifetime=ind2.lifetime,
+            lifespan=ind2.lifespan,
             world_size=ind2.world_size,
         )
         

@@ -8,7 +8,12 @@ from typing import List, Tuple, Optional
 from objects.individual import Individual, mate
 
 
-def initialize_coordinates(
+def log_info(msg, min_verbosity, verbosity_level):
+    if verbosity_level >= min_verbosity:
+        print(msg)
+
+
+def randomize_coordinates(
     pop_size: int,
     world_size: Tuple[int, int],
 ) -> List[Tuple[int, int]]:
@@ -22,19 +27,21 @@ def initialize_coordinates(
 
 def create_population(
     population_size: int,
-    lifetime: int,
+    lifespan: int,
     world_size: Tuple[int, int],
     num_genes: Optional[int] = None,
 ) -> List[Individual]:
+    coordinates = randomize_coordinates(population_size, world_size)
     return [
         Individual(
-            individual_id=f'individual_{i}',
-            lifetime=lifetime,
+            individual_id=f'individual_gen0_{i}',
+            lifespan=lifespan,
             world_size=world_size,
+            initial_coords=coords,
             num_genes=num_genes,
         )
-        for i in range(population_size)
-    ]
+        for i, coords in zip(range(population_size), coordinates)
+    ], coordinates
 
 
 def print_status(
@@ -72,37 +79,43 @@ def evolve(
     num_genes: int,
     world_size: Tuple[int, int],
     num_generations: int,
-    lifetime: int,
+    lifespan: int,
     start_generation: int = 0,
+    end_generation: int = None,
     start_step: int = 0,
+    end_step: int = None,
     mute_probability: Optional[float] = None,
     mate_probability: Optional[float] = None,
     death_boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
     safe_boxes: List[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
     heat_sources: Tuple[int, int] = [],
+    population: List[Individual] = None,
+    verbosity: str = 'v'
 ):
-    population = create_population(
-        population_size=population_size,
-        lifetime=lifetime,
-        world_size=world_size,
-        num_genes=num_genes,
-    )
+    assert(not verbosity or (len(verbosity) <= 3 and all([e == 'v' for e in verbosity])))
+    verbosity_level = 0 if not verbosity else len(verbosity)
+
+    end_step = end_step or lifespan
+    end_generation = end_generation or num_generations
+    if not population:
+        population, current_coordinates = create_population(
+            population_size=population_size,
+            lifespan=lifespan,
+            world_size=world_size,
+            num_genes=num_genes,
+        )
+    else:
+        current_coordinates = [ind.coords for ind in population]
+    
     last_survival_rate = 1
     last_survival_type = 'Only new'
-    for gen_i in range(start_generation, num_generations):
-        print(f"Generation #{gen_i}/{num_generations}")
+    for gen_i in range(start_generation, end_generation):
         generation_size = len(population)
         if generation_size == 0:
-            print("Evolution did not succeed.")
+            log_info("Evolution did not succeed.", 1, verbosity_level)
             break
-        current_coordinates = initialize_coordinates(
-            pop_size=generation_size,
-            world_size=world_size,
-        )
-        for coords, ind in zip(current_coordinates, population):
-            ind.coords = coords
 
-        for step_i in range(start_step, lifetime):
+        for step_i in range(start_step, end_step):
             for ind in population:
                 ind.sense_env(mate_coordinates=current_coordinates, heat_sources=heat_sources)
                 if ind.alive is False:
@@ -110,7 +123,7 @@ def evolve(
                 else:
                     _ = ind.take_step(mate_coordinates=current_coordinates)
                 current_coordinates = [e.coords for e in population]
-            if True:#gen_i == num_generations - 1:
+            if verbosity_level >= 3:
                 time.sleep(0.05)
                 print_status(
                     world_size=world_size,
@@ -118,31 +131,30 @@ def evolve(
                     heat_sources=heat_sources,
                     message=(
                         f" Gen {gen_i}/{num_generations}, "
-                        f"step {step_i}/{lifetime}, "
+                        f"step {step_i}/{lifespan}, "
                         f"pop size {generation_size} "
                         f"{last_survival_type}, "
                         f"last gen survival rate: {(100*last_survival_rate):.2f}% "
                     ),
                 )
+        
+        if step_i + 1 < lifespan:
+            continue
 
+        # we remove the dead individuals
         survivors = [
             ind
             for ind in population
             if ind.alive
             and (
-                (
-                    not safe_boxes
-                    or any([is_in_box(ind.coords, safe_box) for safe_box in (safe_boxes or [])])
-                )
-                and (
-                    not death_boxes
-                    or not any([is_in_box(ind.coords, death_box) for death_box in (death_boxes or [])])
-                )
+                (not safe_boxes or any([is_in_box(ind.coords, safe_box) for safe_box in (safe_boxes)]))
+                and (not death_boxes or not any([is_in_box(ind.coords, death_box) for death_box in (death_boxes)]))
             )
         ]
         num_survivors = len(survivors)
         last_survival_rate = num_survivors/generation_size
 
+        # survivors mate to create individuals for the next generation
         new_generation = []
         for i, (ind1, ind2) in enumerate(combinations(survivors, 2)):
             child1, child2 = mate(
@@ -181,9 +193,20 @@ def evolve(
                 ]
             population = new_generation + survivors + clones
 
+        # muting
         if mute_probability:
             for ind in population:
                 ind.mute(mute_probability=mute_probability)
+
+        # randomize coordinates for the next generation
+        current_coordinates = randomize_coordinates(
+            pop_size=generation_size,
+            world_size=world_size,
+        )
+        for coords, ind in zip(current_coordinates, population):
+            ind.coords = coords
+
+    return population, current_coordinates
 
 
 if __name__ == '__main__':
@@ -191,7 +214,7 @@ if __name__ == '__main__':
     WORLD_SIZE = (20, 60)
 
     HEAT_SOURCES = []
-    LIFETIME = 50
+    LIFESPAN = 50
     NUM_GENERATIONS = 100
     NUM_GENES = 7
 
@@ -205,15 +228,18 @@ if __name__ == '__main__':
     SAFE_BOXES = [
         ((0,0), (20, 15))
     ]
+
+    VERBOSITY = 'vvv'
     evolve(
         population_size=POP_SIZE,
         num_genes=NUM_GENES,
         world_size=WORLD_SIZE,
         num_generations=NUM_GENERATIONS,
-        lifetime=LIFETIME,
+        lifespan=LIFESPAN,
         mute_probability=MUTE_PROBABILITY,
         mate_probability=MATE_PROBABILITY,
         death_boxes=DEATH_BOXES,
         safe_boxes=SAFE_BOXES,
         heat_sources=HEAT_SOURCES,
+        verbosity=VERBOSITY,
     )

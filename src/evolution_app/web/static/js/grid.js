@@ -1,4 +1,6 @@
 var mainGrid = document.getElementById("grid");
+var gridH = document.forms.settingsForm.gridH;
+var gridW = document.forms.settingsForm.gridW;
 
 function updateGrid(h, w) {
     Array.from(document.getElementsByClassName("gridItem")).forEach(gridItem => gridItem.remove());
@@ -14,50 +16,66 @@ function updateGrid(h, w) {
     }
 }
 
-var gridH = document.forms.settingsForm.gridH;
-var gridW = document.forms.settingsForm.gridW;
-updateGrid(gridH.value, gridW.value);
-gridH.onchange = function() {
-    updateGrid(this.value, gridW.value);
-}
-gridW.onchange = function() {
-    updateGrid(gridH.value, this.value);
-}
-
-
-function plotIndividuals(coordinates) {
+function plotIndividuals(individuals) {
     Array.from(document.getElementsByClassName("gridItem")).forEach(e => e.style.backgroundColor = "white");
-    for (let index = 0; index < coordinates.length; index++) {
-        var gridItem = document.getElementById("cell_" + coordinates[index][0] + "-" + coordinates[index][1]);
-        gridItem.style.backgroundColor = stringToColour("cell_" + coordinates[index][0] + "-" + coordinates[index][1]);
+    for (let index = 0; index < individuals.length; index++) {
+        var coordX = individuals[index].coords[0];
+        var coordY = individuals[index].coords[1];
+        var color = individuals[index].color;
+        var gridItem = document.getElementById("cell_" + coordX + "-" + coordY);
+        gridItem.style.backgroundColor = stringToColor(color);
     }
 }
 
-fetch(
-    "update_pop_size?pop_size=" + document.forms.settingsForm.popSizeSlider.value
-    + "&maxY=" + gridH.value
-    + "&maxX=" + gridW.value
-)
+function update_population() {
+    fetch(
+        "/update_population"
+        + "?pop_size=" + popSizeSlider.value
+        + "&lifespan=" + lifespanSlider.value
+        + "&worldY=" + gridH.value
+        + "&worldX=" + gridW.value
+        + "&num_genes=" + numGenesSlider.value
+    )
     .then(function (response) {return response.json();})
     .then(function (json_data) {plotIndividuals(json_data);});
-document.forms.settingsForm.popSizeSlider.onchange = function() {
-    //createIndividuals(this.value);
-    fetch("update_pop_size?pop_size=" + this.value + "&maxY=" + gridH.value + "&maxX=" + gridW.value)
-        .then(function (response) {return response.json();})
-        .then(function (json_data) {plotIndividuals(json_data);});
 }
 
-document.getElementById("startButton").onclick = function () {
-    fetch("action/start")
-        .then(function (response) {return response.text();})
-        .then(function (text) {console.log(text);});
-    
-    fetch("action/evolve")
-        .then(function (response) {return response.text();})
-        .then(function (text) {console.log("New message:");console.log(text);});
-    
-    //var source = new EventSource("action/evolve");
-    //source.onmessage = function (event) {
-    //    console.log(event.data);
-    //}
+function evolve() {
+    for (let generationIdx = 0; generationIdx < 100; generationIdx++) {
+        for (let stepIdx = 0; stepIdx < 60; stepIdx++) {
+            fetch(
+                "/evolve_step"
+                + "?generationIdx=" + generationIdx
+                + "&stepIdx=" + stepIdx
+            )
+            .then(function (response) {return response.json();})
+            .then(function (json_data) {
+                plotIndividuals(json_data);
+            })
+        }
+    }
 }
+
+
+
+updateGrid(gridH.value, gridW.value);
+gridH.onchange = function() {updateGrid(this.value, gridW.value);}
+gridW.onchange = function() {updateGrid(gridH.value, this.value);}
+
+
+var popSizeSlider = document.forms.settingsForm.popSizeSlider
+var lifespanSlider = document.forms.settingsForm.lifespanSlider
+var numGenesSlider = document.forms.settingsForm.numGenesSlider
+update_population();
+popSizeSlider.onchange = function() {update_population();};
+lifespanSlider.onchange = function() {
+    fetch("/update_lifespan?lifespan=" + lifespanSlider.value)
+    .then()
+};
+numGenesSlider.onchange = function() {
+    fetch("/update_num_genes?num_genes=" + numGenesSlider.value)
+    .then(function (response) {return response.json();})
+    .then(function (json_data) {plotIndividuals(json_data);});
+};
+
+document.getElementById("startButton").onclick = function () {evolve();};
